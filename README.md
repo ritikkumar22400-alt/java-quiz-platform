@@ -1,5 +1,7 @@
 # Java-Based Online Quiz Platform
 
+[![build](https://github.com/ritikkumar22400-alt/java-quiz-platform/actions/workflows/build.yml/badge.svg)](https://github.com/ritikkumar22400-alt/java-quiz-platform/actions/workflows/build.yml)
+
 A desktop online quiz platform for Java programming with **timed quizzes**, **detailed
 performance reports**, and full administration - built with **Java Swing**, stored as
 **JSON files**, and compiled with plain **`javac`** (no external libraries, no build tool).
@@ -79,8 +81,13 @@ src/quizplatform/
     ├── participant/           available quizzes, timed quiz frame, history,
     │                          performance, reminders, leaderboard
     └── common/MessagesPanel   shared interaction panel
+test/quizplatform/SmokeTest.java   end-to-end logic tests (36 checks) run in CI
 data/                          created automatically (JSON files, one per quiz/attempt)
 ```
+
+## CI
+
+Every push to `main` triggers a GitHub Actions build (`javac` compile + smoke tests).
 
 ## Notes
 

@@ -1,0 +1,29 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  compile-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Compile main sources
+        run: javac -encoding UTF-8 -d out $(find src -name '*.java')
+
+      - name: Compile tests
+        run: javac -encoding UTF-8 -cp out -d test-out $(find test -name '*.java')
+
+      - name: Run smoke tests
+        run: java -cp out:test-out quizplatform.SmokeTest
