@@ -18,7 +18,7 @@ public class CreatorHistoryPanel extends JPanel {
     private final javax.swing.table.DefaultTableModel model =
             Ui.tableModel("Title", "Status", "Created", "Submitted", "Reviewed", "Admin / Creator Note");
     private final JTable table = Ui.table(model);
-    private final JLabel summary = new JLabel();
+    private final JPanel summaryRow = new JPanel(new java.awt.BorderLayout());
     private List<Quiz> rows = List.of();
 
     public CreatorHistoryPanel(AppContext ctx) {
@@ -32,8 +32,7 @@ public class CreatorHistoryPanel extends JPanel {
     }
 
     private JPanel buildBody() {
-        summary.setFont(Ui.BODY);
-        summary.setForeground(Ui.TEXT);
+        summaryRow.setOpaque(false);
 
         JPanel toolbar = new JPanel(new BorderLayout());
         toolbar.setOpaque(false);
@@ -50,7 +49,7 @@ public class CreatorHistoryPanel extends JPanel {
 
         JPanel center = new JPanel(new BorderLayout(0, 10));
         center.setOpaque(false);
-        center.add(Ui.card("Summary", summary), BorderLayout.NORTH);
+        center.add(summaryRow, BorderLayout.NORTH);
         center.add(Ui.scroll(table), BorderLayout.CENTER);
         body.add(center, BorderLayout.CENTER);
         return body;
@@ -75,9 +74,15 @@ public class CreatorHistoryPanel extends JPanel {
                     q.reviewedAt > 0 ? Ui.dateShort(q.reviewedAt) : "-",
                     note.isEmpty() ? "-" : note));
         }
-        summary.setText("<html>Total: <b>" + rows.size() + "</b> &nbsp;|&nbsp; Draft: <b>" + draft
-                + "</b> &nbsp;|&nbsp; Pending: <b>" + pending
-                + "</b> &nbsp;|&nbsp; Approved: <b>" + approved
-                + "</b> &nbsp;|&nbsp; Rejected: <b>" + rejected + "</b></html>");
+        summaryRow.removeAll();
+        summaryRow.add(Ui.statRow(new String[][]{
+                {"Total created", String.valueOf(rows.size())},
+                {"Draft", String.valueOf(draft)},
+                {"Pending approval", String.valueOf(pending)},
+                {"Published", String.valueOf(approved)},
+                {"Rejected", String.valueOf(rejected)}
+        }), java.awt.BorderLayout.CENTER);
+        summaryRow.revalidate();
+        summaryRow.repaint();
     }
 }

@@ -17,7 +17,7 @@ import java.util.List;
 public class PerformancePanel extends JPanel {
 
     private final AppContext ctx;
-    private final JLabel stats = new JLabel();
+    private final JPanel statsRow = new JPanel(new java.awt.BorderLayout());
     private final javax.swing.table.DefaultTableModel model =
             Ui.tableModel("Quiz", "Score", "Percentage", "Graded", "Date", "Feedback");
     private final JTable table = Ui.table(model);
@@ -35,8 +35,7 @@ public class PerformancePanel extends JPanel {
     }
 
     private JPanel buildBody() {
-        stats.setFont(Ui.BODY);
-        stats.setForeground(Ui.TEXT);
+        statsRow.setOpaque(false);
 
         JPanel charts = new JPanel(new GridLayout(1, 2, 14, 14));
         charts.setOpaque(false);
@@ -45,7 +44,7 @@ public class PerformancePanel extends JPanel {
 
         JPanel body = new JPanel(new BorderLayout(0, 14));
         body.setOpaque(false);
-        body.add(Ui.card("Your performance at a glance", stats), BorderLayout.NORTH);
+        body.add(statsRow, BorderLayout.NORTH);
         body.add(charts, BorderLayout.CENTER);
         body.add(Ui.card("Detailed results", Ui.scroll(table)), BorderLayout.SOUTH);
         return body;
@@ -72,12 +71,16 @@ public class PerformancePanel extends JPanel {
         trendChart.setData(trend, "Your score trend (%)");
         perQuizChart.setData(perQuiz, "Average score per quiz (%)");
 
-        stats.setText("<html>Attempts: <b>" + o.attempts + "</b>"
-                + " &nbsp;|&nbsp; Quizzes taken: <b>" + o.quizzesTaken + "</b>"
-                + " &nbsp;|&nbsp; Average: <b>" + Ui.pct(o.avgPct) + "</b>"
-                + " &nbsp;|&nbsp; Best: <b>" + Ui.pct(o.bestPct) + "</b>"
-                + " &nbsp;|&nbsp; Passed attempts: <b>" + o.passed + "</b>"
-                + " &nbsp;|&nbsp; Threshold: <b>" + ctx.repo.settings.passPercentage + "%</b></html>");
+        statsRow.removeAll();
+        statsRow.add(Ui.statRow(new String[][]{
+                {"Attempts", String.valueOf(o.attempts)},
+                {"Quizzes taken", String.valueOf(o.quizzesTaken)},
+                {"Average", Ui.pct(o.avgPct)},
+                {"Best score", Ui.pct(o.bestPct)},
+                {"Passed attempts", String.valueOf(o.passed)}
+        }), java.awt.BorderLayout.CENTER);
+        statsRow.revalidate();
+        statsRow.repaint();
 
         model.setRowCount(0);
         for (ResultRow r : rows) {

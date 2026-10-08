@@ -11,43 +11,90 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+import javax.swing.table.TableColumn;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Insets;
+import java.awt.LinearGradientPaint;
+import java.awt.RenderingHints;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /** Shared theme + tiny widget helpers for all screens. */
 public final class Ui {
 
-    public static final Color BG = new Color(0xF4, 0xF6, 0xFB);
+    // ------------------------------------------------------------- palette
+    public static final Color BG = new Color(0xEC, 0xEF, 0xF6);          // soft slate content background
     public static final Color CARD = Color.WHITE;
-    public static final Color PRIMARY = new Color(0x25, 0x63, 0xEB);
-    public static final Color PRIMARY_DARK = new Color(0x1E, 0x40, 0xAF);
-    public static final Color DARK = new Color(0x11, 0x18, 0x27);
-    public static final Color TEXT = new Color(0x1F, 0x29, 0x37);
-    public static final Color MUTED = new Color(0x6B, 0x72, 0x80);
-    public static final Color SUCCESS = new Color(0x16, 0xA3, 0x4A);
-    public static final Color DANGER = new Color(0xDC, 0x26, 0x26);
+    public static final Color PRIMARY = new Color(0x4F, 0x46, 0xE5);     // indigo-600
+    public static final Color PRIMARY_DARK = new Color(0x37, 0x2F, 0xC9);
+    public static final Color PRIMARY_LIGHT = new Color(0xDD, 0xD6, 0xFE);
+    public static final Color DARK = new Color(0x1E, 0x29, 0x3B);
+    public static final Color TEXT = new Color(0x33, 0x41, 0x55);
+    public static final Color MUTED = new Color(0x64, 0x74, 0x8B);
+    public static final Color SUCCESS = new Color(0x05, 0x9D, 0x69);
+    public static final Color SUCCESS_LIGHT = new Color(0xD1, 0xFA, 0xE5);
+    public static final Color DANGER = new Color(0xE1, 0x1D, 0x48);
+    public static final Color DANGER_LIGHT = new Color(0xFF, 0xE4, 0xE6);
     public static final Color WARNING = new Color(0xD9, 0x77, 0x06);
-    public static final Color LINE = new Color(0xE5, 0xE7, 0xEB);
-    public static final Color NAV_BG = new Color(0x11, 0x18, 0x27);
-    public static final Color NAV_SEL = new Color(0x25, 0x63, 0xEB);
+    public static final Color WARNING_LIGHT = new Color(0xFE, 0xF3, 0xC7);
+    public static final Color SKY = new Color(0x02, 0x84, 0xC7);
+    public static final Color SKY_LIGHT = new Color(0xE0, 0xF2, 0xFE);
+    public static final Color LINE = new Color(0xE2, 0xE8, 0xF0);
+    public static final Color HEADER_BG = new Color(0xF8, 0xFA, 0xFC);
 
-    public static final Font H1 = new Font("Segoe UI", Font.BOLD, 22);
-    public static final Font H2 = new Font("Segoe UI", Font.BOLD, 16);
+    // Sidebar (dark indigo)
+    public static final Color NAV_BG = new Color(0x18, 0x1E, 0x3A);
+    public static final Color NAV_BG_LIGHT = new Color(0x24, 0x2B, 0x52);
+    public static final Color NAV_SEL = new Color(0x4F, 0x46, 0xE5);
+    public static final Color NAV_TEXT = new Color(0xA5, 0xB0, 0xC7);
+    public static final Color NAV_TEXT_ACTIVE = Color.WHITE;
+
+    // Stat-card accents
+    public static final Color ACCENT_INDIGO = new Color(0x4F, 0x46, 0xE5);
+    public static final Color ACCENT_EMERALD = new Color(0x05, 0x9D, 0x69);
+    public static final Color ACCENT_AMBER = new Color(0xB4, 0x53, 0x09);
+    public static final Color ACCENT_ROSE = new Color(0xBE, 0x12, 0x3C);
+    public static final Color ACCENT_SKY = new Color(0x02, 0x68, 0xA8);
+
+    public static final Color[] ACCENTS = {ACCENT_INDIGO, ACCENT_EMERALD, ACCENT_AMBER, ACCENT_ROSE, ACCENT_SKY};
+
+    public static final Font H1 = new Font("Segoe UI", Font.BOLD, 24);
+    public static final Font H2 = new Font("Segoe UI", Font.BOLD, 17);
     public static final Font BODY = new Font("Segoe UI", Font.PLAIN, 14);
     public static final Font SMALL = new Font("Segoe UI", Font.PLAIN, 12);
     public static final Font BOLD = new Font("Segoe UI", Font.BOLD, 14);
 
     private Ui() {}
 
-    // --------------------------------------------------------------- widgets
+    // ------------------------------------------------------------- helpers
+    public static Color tint(Color c, float alpha) {
+        return new Color(c.getRed() / 255f, c.getGreen() / 255f, c.getBlue() / 255f, alpha);
+    }
+
+    public static Color darker(Color c) {
+        return c.darker().darker();
+    }
+
+    public static Color lighter(Color c) {
+        float f = 1.25f;
+        return new Color(Math.min(255, (int) (c.getRed() * f)),
+                Math.min(255, (int) (c.getGreen() * f)),
+                Math.min(255, (int) (c.getBlue() * f)));
+    }
+
+    // ------------------------------------------------------------ text
     public static JLabel heading(String text) {
         JLabel l = new JLabel(text);
         l.setFont(H1);
@@ -76,12 +123,25 @@ public final class Ui {
         return l;
     }
 
+    /** Colored pill badge for statuses. */
+    public static JLabel pill(String text, Color fg, Color bg) {
+        JLabel l = new JLabel(" " + text + " ");
+        l.setFont(BOLD);
+        l.setForeground(fg);
+        l.setOpaque(true);
+        l.setBackground(bg);
+        l.setBorder(BorderFactory.createEmptyBorder(3, 10, 3, 10));
+        l.setHorizontalAlignment(SwingConstants.CENTER);
+        return l;
+    }
+
+    // ------------------------------------------------------------- fields
     public static JTextField field(int columns) {
         JTextField f = new JTextField(columns);
         f.setFont(BODY);
         f.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(LINE),
-                new EmptyBorder(6, 8, 6, 8)));
+                BorderFactory.createLineBorder(new Color(0xC7, 0xD2, 0xE0)),
+                new EmptyBorder(7, 10, 7, 10)));
         return f;
     }
 
@@ -92,44 +152,167 @@ public final class Ui {
         return c;
     }
 
-    public static JButton button(String text, Color bg) {
-        JButton b = new JButton(text);
-        b.setFont(BOLD);
-        b.setForeground(Color.WHITE);
-        b.setBackground(bg);
-        b.setFocusPainted(false);
-        b.setBorder(new EmptyBorder(8, 16, 8, 16));
-        b.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        return b;
+    // ------------------------------------------------------------- buttons
+    public static JButton button(String text, Color base) {
+        return new RoundedButton(text, base);
     }
 
     public static JButton primary(String text) { return button(text, PRIMARY); }
     public static JButton danger(String text) { return button(text, DANGER); }
     public static JButton success(String text) { return button(text, SUCCESS); }
-    public static JButton neutral(String text) { return button(text, new Color(0x4B, 0x55, 0x63)); }
+    public static JButton neutral(String text) { return button(text, new Color(0x64, 0x74, 0x8B)); }
 
-    /** White rounded-ish card container with padding. */
+    /** Flat rounded button with gradient + hover feedback. */
+    public static class RoundedButton extends JButton {
+        private final Color base;
+
+        public RoundedButton(String text, Color base) {
+            super(text);
+            this.base = base;
+            setFont(BOLD);
+            setForeground(Color.WHITE);
+            setContentAreaFilled(false);
+            setBorderPainted(false);
+            setFocusPainted(false);
+            setOpaque(false);
+            setBorder(new EmptyBorder(9, 18, 9, 18));
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            int w = getWidth(), h = getHeight();
+            Color top = getModel().isRollover() ? lighter(base) : base;
+            Color bottom = getModel().isPressed() ? darker(base) : darker(top);
+            g2.setPaint(new LinearGradientPaint(0, 0, 0, h,
+                    new float[]{0f, 1f}, new Color[]{top, bottom}));
+            g2.fillRoundRect(0, 0, w, h, 12, 12);
+            if (!isEnabled()) {
+                g2.setColor(tint(Color.WHITE, 0.45f));
+                g2.fillRoundRect(0, 0, w, h, 12, 12);
+            }
+            g2.dispose();
+            super.paintComponent(g);
+        }
+    }
+
+    // -------------------------------------------------------------- cards
+    /** White card with a soft drop shadow. */
     public static JPanel card(JComponent content) {
-        JPanel p = new JPanel(new java.awt.BorderLayout());
-        p.setBackground(CARD);
-        p.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(LINE),
-                new EmptyBorder(16, 16, 16, 16)));
-        p.add(content);
-        return p;
+        return new ShadowCard(content);
     }
 
     public static JPanel card(String title, JComponent content) {
-        JPanel wrap = new JPanel(new java.awt.BorderLayout(0, 10));
+        JPanel wrap = new JPanel(new java.awt.BorderLayout(0, 12));
         wrap.setOpaque(false);
         if (title != null && !title.isEmpty()) {
+            JPanel titleRow = new JPanel(new java.awt.BorderLayout(8, 0));
+            titleRow.setOpaque(false);
+            JPanel accent = new JPanel();
+            accent.setBackground(PRIMARY);
+            accent.setPreferredSize(new Dimension(4, 20));
+            titleRow.add(accent, java.awt.BorderLayout.WEST);
             JLabel t = new JLabel(title);
             t.setFont(H2);
             t.setForeground(DARK);
-            wrap.add(t, java.awt.BorderLayout.NORTH);
+            titleRow.add(t, java.awt.BorderLayout.CENTER);
+            wrap.add(titleRow, java.awt.BorderLayout.NORTH);
         }
         wrap.add(card(content), java.awt.BorderLayout.CENTER);
         return wrap;
+    }
+
+    /** Card with a drop shadow drawn underneath. */
+    public static class ShadowCard extends JPanel {
+        public ShadowCard(JComponent content) {
+            setLayout(new java.awt.BorderLayout());
+            setOpaque(false);
+            setBorder(BorderFactory.createEmptyBorder(1, 1, 6, 6));
+            add(content);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            int w = getWidth() - 4, h = getHeight() - 4;
+            for (int i = 3; i >= 1; i--) {
+                g2.setColor(tint(new Color(0x1E, 0x29, 0x3B), 0.05f + 0.02f * (3 - i)));
+                g2.fillRoundRect(i * 2, i * 2 + 3, w, h, 16, 16);
+            }
+            g2.setColor(CARD);
+            g2.fillRoundRect(0, 0, w, h, 16, 16);
+            g2.setColor(new Color(0xEE, 0xF1, 0xF8));
+            g2.setStroke(new BasicStroke(1f));
+            g2.drawRoundRect(0, 0, w - 1, h - 1, 16, 16);
+            g2.dispose();
+            super.paintComponent(g);
+        }
+    }
+
+    /** Compact KPI tile: colored top bar + label + big value. */
+    public static JPanel statCard(String label, String value, Color accent) {
+        JPanel p = new JPanel(new java.awt.BorderLayout(0, 4));
+        p.setBackground(CARD);
+        p.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(LINE),
+                new EmptyBorder(14, 16, 16, 16)));
+
+        JPanel top = new JPanel(new java.awt.BorderLayout());
+        top.setOpaque(false);
+        JPanel bar = new JPanel();
+        bar.setBackground(accent);
+        bar.setPreferredSize(new Dimension(34, 4));
+        top.add(bar, java.awt.BorderLayout.WEST);
+        p.add(top, java.awt.BorderLayout.NORTH);
+
+        JLabel v = new JLabel(value);
+        v.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        v.setForeground(accent);
+        p.add(v, java.awt.BorderLayout.CENTER);
+
+        JLabel l = new JLabel(label);
+        l.setFont(SMALL);
+        l.setForeground(MUTED);
+        p.add(l, java.awt.BorderLayout.SOUTH);
+        return p;
+    }
+
+    /** Row of KPI tiles, evenly spread. */
+    public static JPanel statRow(String[][] items) {
+        JPanel row = new JPanel(new java.awt.GridLayout(1, items.length, 14, 0));
+        row.setOpaque(false);
+        for (int i = 0; i < items.length; i++) {
+            row.add(statCard(items[i][0], items[i][1], ACCENTS[i % ACCENTS.length]));
+        }
+        return row;
+    }
+
+    /** Vertical gradient panel (diagonal). */
+    public static JPanel gradientPanel(Color top, Color bottom) {
+        return new GradientPanel(top, bottom);
+    }
+
+    public static class GradientPanel extends JPanel {
+        private final Color top, bottom;
+
+        public GradientPanel(Color top, Color bottom) {
+            this.top = top;
+            this.bottom = bottom;
+            setOpaque(false);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setPaint(new LinearGradientPaint(0, 0, getWidth(), getHeight(),
+                    new float[]{0f, 1f}, new Color[]{top, bottom}));
+            g2.fillRect(0, 0, getWidth(), getHeight());
+            g2.dispose();
+            super.paintComponent(g);
+        }
     }
 
     public static JScrollPane scroll(JComponent c) {
@@ -139,7 +322,7 @@ public final class Ui {
         return sp;
     }
 
-    // ----------------------------------------------------------------- table
+    // --------------------------------------------------------------- table
     public static DefaultTableModel tableModel(String... columns) {
         return new DefaultTableModel(columns, 0) {
             @Override
@@ -150,30 +333,72 @@ public final class Ui {
     public static JTable table(DefaultTableModel model) {
         JTable t = new JTable(model);
         t.setFont(BODY);
-        t.setRowHeight(30);
+        t.setRowHeight(34);
         t.setShowGrid(false);
         t.setIntercellSpacing(new Dimension(0, 0));
-        t.setSelectionBackground(new Color(0xDB, 0xEA, 0xFE));
+        t.setSelectionBackground(PrimaryPicker.LEADING_TINT);
         t.setSelectionForeground(TEXT);
         t.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         t.getColumnModel().setColumnSelectionAllowed(false);
+
         JTableHeader h = t.getTableHeader();
         h.setFont(BOLD);
-        h.setBackground(new Color(0xF3, 0xF4, 0xF6));
-        h.setForeground(TEXT);
-        h.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, LINE));
-        DefaultTableCellRenderer center = new DefaultTableCellRenderer();
-        center.setHorizontalAlignment(JLabel.CENTER);
+        h.setBackground(new Color(0xF1, 0xF4, 0xF9));
+        h.setForeground(new Color(0x47, 0x55, 0x69));
+        h.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, PRIMARY));
+
+        t.setDefaultRenderer(Object.class, new JsonRenderer());
         for (int i = 0; i < t.getColumnModel().getColumnCount(); i++) {
-            t.getColumnModel().getColumn(i).setCellRenderer(center);
+            TableColumn col = t.getColumnModel().getColumn(i);
+            col.setCellRenderer(new JsonRenderer());
         }
-        t.setDefaultRenderer(Object.class, center);
         return t;
+    }
+
+    /** Tint used for table selection — shared with renderer. */
+    static final class PrimaryPicker {
+        static final Color LEADING_TINT = new Color(0xE0, 0xE7, 0xFF);
+    }
+
+    /** Zebra-striped cells with status-aware colored text. */
+    static final class JsonRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                                                       boolean hasFocus, int row, int column) {
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            setHorizontalAlignment(SwingConstants.CENTER);
+            setFont(BODY);
+            setBorder(new EmptyBorder(4, 8, 4, 8));
+            if (isSelected) {
+                setBackground(PrimaryPicker.LEADING_TINT);
+            } else {
+                setBackground(row % 2 == 0 ? Color.WHITE : new Color(0xF7, 0xF9, 0xFD));
+            }
+            String v = value == null ? "" : String.valueOf(value);
+            setForeground(statusColorFor(v, table, row));
+            return c;
+        }
+    }
+
+    /** Maps cell text to a readable color; column-insensitive keyword match. */
+    static Color statusColorFor(String v, JTable table, int row) {
+        String lower = v.toLowerCase();
+        if (lower.contains("failed") || lower.contains("rejected")
+                || lower.contains("disabled") || lower.contains("limit reached")
+                || lower.contains("past") || lower.contains("unread")
+                || lower.contains("rejected")) return DANGER;
+        if (lower.contains("passed") || lower.contains("approved")
+                || lower.contains("active") || lower.contains("available")
+                || lower.contains("success")) return SUCCESS;
+        if (lower.contains("pending approval") || lower.contains("upcoming")
+                || lower.contains("warning")) return WARNING;
+        if (lower.contains("draft") || lower.contains("read")) return MUTED;
+        return TEXT;
     }
 
     public static Object[] row(Object... cells) { return cells; }
 
-    // --------------------------------------------------------------- dialogs
+    // -------------------------------------------------------------- dialogs
     public static void error(Component parent, String msg) {
         JOptionPane.showMessageDialog(parent, msg, "Error", JOptionPane.ERROR_MESSAGE);
     }
@@ -197,7 +422,7 @@ public final class Ui {
         return v == null ? null : String.valueOf(v);
     }
 
-    // ----------------------------------------------------------------- misc
+    // --------------------------------------------------------------- misc
     private static final SimpleDateFormat FMT = new SimpleDateFormat("dd MMM yyyy, HH:mm");
     private static final SimpleDateFormat FMT_SHORT = new SimpleDateFormat("dd MMM yyyy");
 
@@ -222,17 +447,31 @@ public final class Ui {
         };
     }
 
+    /** Page scaffold with a richer, gradient-accented header band. */
     public static JPanel page(String title, String subtitle, JComponent body) {
-        JPanel p = new JPanel(new java.awt.BorderLayout(0, 14));
+        JPanel p = new JPanel(new java.awt.BorderLayout(0, 18));
         p.setBackground(BG);
-        p.setBorder(new EmptyBorder(22, 26, 22, 26));
-        JPanel head = new JPanel(new java.awt.BorderLayout());
+        p.setBorder(new EmptyBorder(24, 28, 24, 28));
+
+        JPanel head = new JPanel(new java.awt.BorderLayout(12, 0));
         head.setOpaque(false);
-        head.add(heading(title), java.awt.BorderLayout.NORTH);
+
+        JPanel titleBlock = new JPanel(new java.awt.BorderLayout(12, 2));
+        titleBlock.setOpaque(false);
+        JPanel accent = new JPanel();
+        accent.setPreferredSize(new Dimension(6, 42));
+        accent.setBackground(PRIMARY);
+        titleBlock.add(accent, java.awt.BorderLayout.WEST);
+
+        JPanel texts = new JPanel(new java.awt.BorderLayout(0, 3));
+        texts.setOpaque(false);
+        texts.add(heading(title), java.awt.BorderLayout.NORTH);
         if (subtitle != null && !subtitle.isEmpty()) {
-            head.add(new JLabel(" "), java.awt.BorderLayout.CENTER);
-            head.add(muted(subtitle), java.awt.BorderLayout.SOUTH);
+            texts.add(muted(subtitle), java.awt.BorderLayout.SOUTH);
         }
+        titleBlock.add(texts, java.awt.BorderLayout.CENTER);
+        head.add(titleBlock, java.awt.BorderLayout.WEST);
+
         p.add(head, java.awt.BorderLayout.NORTH);
         p.add(body, java.awt.BorderLayout.CENTER);
         return p;

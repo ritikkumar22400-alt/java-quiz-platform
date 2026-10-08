@@ -40,9 +40,8 @@ public class LoginFrame extends JFrame {
         root.setBackground(Ui.BG);
 
         // brand panel
-        JPanel brand = new JPanel();
-        brand.setBackground(Ui.PRIMARY);
-        brand.setPreferredSize(new Dimension(340, 0));
+        JPanel brand = Ui.gradientPanel(Ui.PRIMARY, new Color(0x7C, 0x3A, 0xED));
+        brand.setPreferredSize(new Dimension(360, 0));
         brand.setLayout(new GridBagLayout());
         GridBagConstraints bg = new GridBagConstraints();
         bg.gridx = 0;
@@ -51,30 +50,30 @@ public class LoginFrame extends JFrame {
 
         bg.gridy = 0;
         JLabel logo = new JLabel("JQ");
-        logo.setFont(new Font("Segoe UI", Font.BOLD, 54));
+        logo.setFont(new Font("Segoe UI", Font.BOLD, 56));
         logo.setForeground(Color.WHITE);
         brand.add(logo, bg);
 
         bg.gridy = 1;
         JLabel title = new JLabel("JavaQuiz Platform");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        title.setFont(new Font("Segoe UI", Font.BOLD, 27));
         title.setForeground(Color.WHITE);
         brand.add(title, bg);
 
         bg.gridy = 2;
         JLabel tag = new JLabel("<html>Timed Java quizzes,<br>detailed performance reports<br>and full administration.</html>");
-        tag.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        tag.setForeground(new Color(0xDB, 0xEA, 0xFE));
+        tag.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        tag.setForeground(new Color(0xE4, 0xE0, 0xFF));
         brand.add(tag, bg);
 
         bg.gridy = 3;
-        bg.insets = new Insets(40, 24, 10, 24);
+        bg.insets = new Insets(44, 24, 10, 24);
         JLabel hint = new JLabel("<html><b>Demo accounts</b><br>"
                 + "admin@quiz.local / admin123<br>"
                 + "creator@quiz.local / creator123<br>"
                 + "alice@quiz.local / pass123</html>");
-        hint.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        hint.setForeground(new Color(0xBF, 0xDB, 0xFE));
+        hint.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        hint.setForeground(new Color(0xD5, 0xCF, 0xFF));
         brand.add(hint, bg);
 
         // form

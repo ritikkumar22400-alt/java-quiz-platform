@@ -46,6 +46,17 @@ public class QuizTakingFrame extends JFrame {
     private final JLabel progressLabel = new JLabel();
     private final JPanel questionHost = new JPanel(new BorderLayout());
     private final javax.swing.Timer timer;
+    private final JPanel timerPill = new JPanel(null) {
+        @Override protected void paintComponent(java.awt.Graphics g) {
+            java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+            g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING,
+                    java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+            Color bg = remainingSec > 0 && remainingSec <= 60 ? Ui.DANGER : Ui.PRIMARY;
+            g2.setPaint(bg);
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 18, 18);
+            g2.dispose();
+        }
+    };
 
     public QuizTakingFrame(AppContext ctx, Quiz quiz, Runnable onFinished) {
         super("Taking Quiz: " + quiz.title);
@@ -103,9 +114,12 @@ public class QuizTakingFrame extends JFrame {
         titles.add(progressLabel, BorderLayout.SOUTH);
         top.add(titles, BorderLayout.WEST);
 
-        timerLabel.setFont(new Font("Segoe UI", Font.BOLD, 26));
-        timerLabel.setForeground(Ui.PRIMARY);
-        top.add(timerLabel, BorderLayout.EAST);
+        timerPill.setPreferredSize(new Dimension(104, 44));
+        timerPill.setLayout(new java.awt.GridBagLayout());
+        timerLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        timerLabel.setForeground(Color.WHITE);
+        timerPill.add(timerLabel);
+        top.add(timerPill, BorderLayout.EAST);
         root.add(top, BorderLayout.NORTH);
 
         questionHost.setBackground(Ui.BG);
@@ -147,11 +161,10 @@ public class QuizTakingFrame extends JFrame {
         current = index;
         Question q = quiz.questions.get(index);
 
-        JPanel card = new JPanel(new GridBagLayout());
-        card.setBackground(Color.WHITE);
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Ui.LINE),
-                new javax.swing.border.EmptyBorder(24, 26, 24, 26)));
+        JPanel inner = new JPanel(new GridBagLayout());
+        inner.setBackground(Color.WHITE);
+        inner.setBorder(new javax.swing.border.EmptyBorder(22, 26, 24, 26));
+        JPanel card = Ui.card(inner);
         GridBagConstraints c = new GridBagConstraints();
         c.gridx = 0;
         c.anchor = GridBagConstraints.WEST;
@@ -162,25 +175,48 @@ public class QuizTakingFrame extends JFrame {
         progressLabel.setText("Question " + (index + 1) + " of " + quiz.questions.size()
                 + "  |  " + q.points + " point" + (q.points > 1 ? "s" : ""));
 
-        JLabel qLabel = new JLabel("<html><div style='width:600px'>" + (index + 1) + ". "
+        JPanel chipRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        chipRow.setOpaque(false);
+        chipRow.add(Ui.pill("Question " + (index + 1), Ui.PRIMARY_DARK, new Color(0xE0, 0xE7, 0xFF)));
+        chipRow.add(Ui.pill(q.points + " pt" + (q.points > 1 ? "s" : ""), Ui.ACCENT_AMBER, Ui.WARNING_LIGHT));
+        c.gridy = 0;
+        c.insets = new Insets(2, 4, 10, 4);
+        inner.add(chipRow, c);
+
+        JLabel qLabel = new JLabel("<html><div style='width:620px;font-size:18px'>" + (index + 1) + ". "
                 + escape(q.text) + "</div></html>");
         qLabel.setFont(Ui.H2);
         qLabel.setForeground(Ui.TEXT);
-        c.gridy = 0;
-        card.add(qLabel, c);
+        c.gridy = 1;
+        c.insets = new Insets(6, 4, 12, 4);
+        inner.add(qLabel, c);
 
         ButtonGroup group = new ButtonGroup();
         int chosen = answers.get(index);
         for (int i = 0; i < q.options.size(); i++) {
             JRadioButton rb = new JRadioButton((char) ('A' + i) + ". " + q.options.get(i));
             rb.setFont(Ui.BODY);
+            rb.setForeground(Ui.TEXT);
+            rb.setOpaque(true);
+            rb.setBackground(Color.WHITE);
+            rb.setFocusPainted(false);
+            rb.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
             rb.setSelected(i == chosen);
             final int opt = i;
             rb.addActionListener(e -> answers.set(current, opt));
+            rb.addItemListener(e -> {
+                if (rb.isSelected()) {
+                    rb.setFont(Ui.BOLD);
+                    rb.setForeground(Ui.PRIMARY_DARK);
+                } else {
+                    rb.setFont(Ui.BODY);
+                    rb.setForeground(Ui.TEXT);
+                }
+            });
             group.add(rb);
-            c.gridy = i + 1;
-            c.insets = new Insets(4, 4, 4, 4);
-            card.add(rb, c);
+            c.gridy = i + 2;
+            c.insets = new Insets(5, 4, 5, 4);
+            inner.add(rb, c);
         }
 
         questionHost.removeAll();
@@ -207,7 +243,7 @@ public class QuizTakingFrame extends JFrame {
         int m = Math.max(0, remainingSec) / 60;
         int s = Math.max(0, remainingSec) % 60;
         timerLabel.setText(String.format("%02d:%02d", m, s));
-        timerLabel.setForeground(remainingSec <= 60 ? Ui.DANGER : Ui.PRIMARY);
+        timerPill.repaint();
     }
 
     private void confirmSubmit() {

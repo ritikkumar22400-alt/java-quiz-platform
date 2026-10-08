@@ -19,7 +19,7 @@ import java.util.Map;
 public class CreatorOverviewPanel extends JPanel {
 
     private final AppContext ctx;
-    private final JLabel stats = new JLabel();
+    private final JPanel statsRow = new JPanel(new java.awt.BorderLayout());
     private final ChartPanel avgChart = new ChartPanel(ChartPanel.Type.BAR, "Average score per quiz (%)", List.of());
     private final ChartPanel attemptsChart = new ChartPanel(ChartPanel.Type.BAR, "Attempts received per quiz", List.of());
     private final ChartPanel passChart = new ChartPanel(ChartPanel.Type.PIE, "Pass/fail across my quizzes", List.of());
@@ -36,8 +36,7 @@ public class CreatorOverviewPanel extends JPanel {
     }
 
     private JPanel buildBody() {
-        stats.setFont(Ui.BODY);
-        stats.setForeground(Ui.TEXT);
+        statsRow.setOpaque(false);
 
         JPanel charts = new JPanel(new GridLayout(2, 2, 14, 14));
         charts.setOpaque(false);
@@ -52,7 +51,7 @@ public class CreatorOverviewPanel extends JPanel {
 
         JPanel body = new JPanel(new BorderLayout(0, 14));
         body.setOpaque(false);
-        body.add(Ui.card("At a glance", stats), BorderLayout.NORTH);
+        body.add(statsRow, BorderLayout.NORTH);
         body.add(scroll, BorderLayout.CENTER);
         return body;
     }
@@ -117,11 +116,17 @@ public class CreatorOverviewPanel extends JPanel {
         trendChart.setData(trend, "Recent attempts on my quizzes");
 
         double avgScore = myAttempts.isEmpty() ? 0 : sum / myAttempts.size();
-        stats.setText("<html>Quizzes created: <b>" + mine.size() + "</b>"
-                + " &nbsp;|&nbsp; Published: <b>" + mine.stream().filter(q -> q.status == Quiz.Status.APPROVED).count() + "</b>"
-                + " &nbsp;|&nbsp; Attempts received: <b>" + myAttempts.size() + "</b>"
-                + " &nbsp;|&nbsp; Average score: <b>" + Ui.pct(avgScore) + "</b>"
-                + " &nbsp;|&nbsp; Passed: <b>" + passed + "</b></html>");
+        int published = (int) mine.stream().filter(q -> q.status == Quiz.Status.APPROVED).count();
+        statsRow.removeAll();
+        statsRow.add(Ui.statRow(new String[][]{
+                {"Quizzes created", String.valueOf(mine.size())},
+                {"Published", String.valueOf(published)},
+                {"Attempts received", String.valueOf(myAttempts.size())},
+                {"Average score", Ui.pct(avgScore)},
+                {"Passed attempts", String.valueOf(passed)}
+        }), java.awt.BorderLayout.CENTER);
+        statsRow.revalidate();
+        statsRow.repaint();
         repaint();
     }
 }

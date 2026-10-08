@@ -22,7 +22,7 @@ public class HistoryPanel extends JPanel {
             Ui.tableModel("Quiz", "Score", "Result", "Time Taken", "Submitted", "Feedback");
     private final JTable table = Ui.table(model);
     private List<Attempt> rows = List.of();
-    private final JLabel summary = new JLabel();
+    private final JPanel summaryRow = new JPanel(new java.awt.BorderLayout());
 
     public HistoryPanel(AppContext ctx) {
         this.ctx = ctx;
@@ -35,8 +35,7 @@ public class HistoryPanel extends JPanel {
     }
 
     private JPanel buildBody() {
-        summary.setFont(Ui.BODY);
-        summary.setForeground(Ui.TEXT);
+        summaryRow.setOpaque(false);
 
         JPanel toolbar = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 8, 0));
         toolbar.setOpaque(false);
@@ -53,7 +52,7 @@ public class HistoryPanel extends JPanel {
 
         JPanel center = new JPanel(new BorderLayout(0, 10));
         center.setOpaque(false);
-        center.add(Ui.card("Summary", summary), BorderLayout.NORTH);
+        center.add(summaryRow, BorderLayout.NORTH);
         center.add(Ui.scroll(table), BorderLayout.CENTER);
         body.add(center, BorderLayout.CENTER);
         return body;
@@ -118,7 +117,17 @@ public class HistoryPanel extends JPanel {
                     a.timeTakenSec + "s", Ui.date(a.submittedAt),
                     a.feedback.isEmpty() ? "-" : a.feedback));
         }
-        summary.setText("<html>Quizzes attempted: <b>" + rows.size() + "</b> &nbsp;|&nbsp; Passed: <b>"
-                + passed + "</b> &nbsp;|&nbsp; Pass threshold: <b>" + ctx.repo.settings.passPercentage + "%</b></html>");
+        int attempted = rows.size();
+        int failed = attempted - passed;
+        summaryRow.removeAll();
+        summaryRow.add(Ui.statRow(new String[][]{
+                {"Quizzes attempted", String.valueOf(attempted)},
+                {"Passed", String.valueOf(passed)},
+                {"Failed", String.valueOf(failed)},
+                {"Pass threshold", ctx.repo.settings.passPercentage + "%"},
+                {"Success rate", Ui.pct(attempted == 0 ? 0 : 100.0 * passed / attempted)}
+        }), java.awt.BorderLayout.CENTER);
+        summaryRow.revalidate();
+        summaryRow.repaint();
     }
 }

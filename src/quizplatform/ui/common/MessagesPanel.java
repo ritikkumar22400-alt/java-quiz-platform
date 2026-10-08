@@ -16,6 +16,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.text.SimpleDateFormat;
@@ -52,33 +53,44 @@ public class MessagesPanel extends JPanel {
 
         // left
         JPanel left = new JPanel(new BorderLayout(0, 8));
-        left.setPreferredSize(new Dimension(250, 0));
+        left.setPreferredSize(new Dimension(260, 0));
+        left.setOpaque(false);
         JLabel head = Ui.label("Contacts");
         left.add(head, BorderLayout.NORTH);
 
+        JPanel leftInner = new JPanel(new BorderLayout(0, 8));
+        leftInner.setOpaque(false);
+        leftInner.setBackground(Color.WHITE);
+        leftInner.setBorder(new javax.swing.border.EmptyBorder(10, 10, 10, 10));
         contactList.setFont(Ui.BODY);
+        contactList.setBackground(Color.WHITE);
         contactList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        contactList.setFixedCellHeight(32);
+        contactList.setFixedCellHeight(34);
+        contactList.setSelectionBackground(new Color(0xE0, 0xE7, 0xFF));
+        contactList.setSelectionForeground(Ui.PRIMARY_DARK);
         contactList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && contactList.getSelectedIndex() >= 0) {
                 active = contactUsers.get(contactList.getSelectedIndex());
                 loadConversation();
             }
         });
-        left.add(new JScrollPane(contactList), BorderLayout.CENTER);
+        JScrollPane clScroll = new JScrollPane(contactList);
+        clScroll.setBorder(null);
+        clScroll.getViewport().setBackground(Color.WHITE);
+        leftInner.add(clScroll, BorderLayout.CENTER);
 
         JPanel start = new JPanel(new BorderLayout(0, 6));
         start.setOpaque(false);
-        start.add(Ui.muted("Start new conversation:"), BorderLayout.NORTH);
+        start.add(Ui.muted("Start a new conversation:"), BorderLayout.NORTH);
         JPanel row = new JPanel(new BorderLayout(6, 0));
         row.setOpaque(false);
         newChatCombo.setFont(Ui.SMALL);
         row.add(newChatCombo, BorderLayout.CENTER);
         JButton startBtn = Ui.primary("Chat");
-        startBtn.setOpaque(false);
         row.add(startBtn, BorderLayout.EAST);
         start.add(row, BorderLayout.CENTER);
-        left.add(start, BorderLayout.SOUTH);
+        leftInner.add(start, BorderLayout.SOUTH);
+        left.add(leftInner, BorderLayout.CENTER);
 
         startBtn.addActionListener(e -> {
             int i = newChatCombo.getSelectedIndex();
@@ -95,35 +107,42 @@ public class MessagesPanel extends JPanel {
 
         // right
         JPanel right = new JPanel(new BorderLayout(0, 8));
+        right.setOpaque(false);
+
+        JPanel rightInner = new JPanel(new BorderLayout(0, 8));
+        rightInner.setOpaque(false);
+        rightInner.setBackground(Color.WHITE);
+        rightInner.setBorder(new javax.swing.border.EmptyBorder(12, 12, 12, 12));
         JLabel activeLabel = Ui.subheading("Select a contact to view the conversation.");
-        right.add(activeLabel, BorderLayout.NORTH);
+        rightInner.add(activeLabel, BorderLayout.NORTH);
 
         conversation.setEditable(false);
         conversation.setFont(Ui.BODY);
         conversation.setLineWrap(true);
         conversation.setWrapStyleWord(true);
-        conversation.setMargin(new java.awt.Insets(10, 10, 10, 10));
+        conversation.setMargin(new java.awt.Insets(12, 12, 12, 12));
         JScrollPane convScroll = new JScrollPane(conversation);
-        convScroll.setBorder(javax.swing.BorderFactory.createLineBorder(Ui.LINE));
-        right.add(convScroll, BorderLayout.CENTER);
+        convScroll.setBorder(null);
+        rightInner.add(convScroll, BorderLayout.CENTER);
 
         JPanel inputRow = new JPanel(new BorderLayout(8, 0));
         inputRow.setOpaque(false);
         input.addActionListener(e -> send());
         inputRow.add(input, BorderLayout.CENTER);
         JButton send = Ui.primary("Send");
-        inputRow.add(send, BorderLayout.EAST);
         JButton refresh = Ui.neutral("Refresh");
+        inputRow.add(send, BorderLayout.EAST);
         inputRow.add(refresh, BorderLayout.EAST);
-        right.add(inputRow, BorderLayout.SOUTH);
+        rightInner.add(inputRow, BorderLayout.SOUTH);
         send.addActionListener(e -> send());
         refresh.addActionListener(e -> {
             reloadContacts();
             if (active != null) loadConversation();
         });
+        right.add(rightInner, BorderLayout.CENTER);
 
-        body.add(left, BorderLayout.WEST);
-        body.add(right, BorderLayout.CENTER);
+        body.add(Ui.card(left), BorderLayout.WEST);
+        body.add(Ui.card(right), BorderLayout.CENTER);
         return body;
     }
 

@@ -19,7 +19,7 @@ public class ReportsPanel extends JPanel {
     private final ChartPanel passChart = new ChartPanel(ChartPanel.Type.PIE, "Attempts pass/fail split", List.of());
     private final ChartPanel trendChart = new ChartPanel(ChartPanel.Type.LINE, "Attempts over the last 14 days", List.of());
     private final ChartPanel attemptsChart = new ChartPanel(ChartPanel.Type.BAR, "Attempts per quiz", List.of());
-    private final JLabel statRow = new JLabel();
+    private final JPanel statRowPanel = new JPanel(new java.awt.BorderLayout());
 
     public ReportsPanel(AppContext ctx) {
         this.ctx = ctx;
@@ -32,11 +32,10 @@ public class ReportsPanel extends JPanel {
     }
 
     private JPanel buildBody() {
-        statRow.setFont(Ui.BODY);
-        statRow.setForeground(Ui.TEXT);
+        statRowPanel.setOpaque(false);
         JPanel body = new JPanel(new BorderLayout(0, 14));
         body.setOpaque(false);
-        body.add(Ui.card("Platform at a glance", statRow), BorderLayout.NORTH);
+        body.add(statRowPanel, BorderLayout.NORTH);
 
         JPanel charts = new JPanel(new GridLayout(2, 2, 14, 14));
         charts.setOpaque(false);
@@ -78,11 +77,16 @@ public class ReportsPanel extends JPanel {
             for (var a : all) sum += a.percentage();
             avg = sum / all.size();
         }
-        statRow.setText("<html><b>Users:</b> " + ctx.repo.users.size()
-                + " &nbsp;|&nbsp; <b>Quizzes:</b> " + ctx.repo.quizzes.size()
-                + " &nbsp;|&nbsp; <b>Attempts:</b> " + all.size()
-                + " &nbsp;|&nbsp; <b>Average score:</b> " + Ui.pct(avg)
-                + " &nbsp;|&nbsp; <b>Pass threshold:</b> " + ctx.repo.settings.passPercentage + "%</html>");
+        statRowPanel.removeAll();
+        statRowPanel.add(Ui.statRow(new String[][]{
+                {"Users", String.valueOf(ctx.repo.users.size())},
+                {"Quizzes", String.valueOf(ctx.repo.quizzes.size())},
+                {"Attempts", String.valueOf(all.size())},
+                {"Average score", Ui.pct(avg)},
+                {"Pass threshold", ctx.repo.settings.passPercentage + "%"}
+        }), java.awt.BorderLayout.CENTER);
+        statRowPanel.revalidate();
+        statRowPanel.repaint();
         repaint();
     }
 }
